@@ -1,0 +1,56 @@
+os: linux
+dist: bionic 
+language: java
+jdk: openjdk11
+
+if: branch IN (main, development, qa)
+
+addons:
+  sonarcloud:
+    organization: "enescinar914"
+    token: $SONAR_TOKEN
+    
+before_install: 
+  - java --version
+  
+script:
+  # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=enescinar914_sm703
+
+after_script:
+  - sonar-scanner
+
+deploy:
+  - provider: s3
+    access_key_id: $ACCESS_KEY_ID
+    secret_access_key: $SECRET_ACCESS_KEY
+    bucket: "sm703bucket"
+    region: us-east-2
+    skip_cleanup: true
+    on:
+      branch: main
+    
+  - provider: s3
+    access_key_id: $ACCESS_KEY_ID
+    secret_access_key: $SECRET_ACCESS_KEY
+    bucket: "developmentsm703"
+    region: us-east-2
+    skip_cleanup: true
+    on:
+      branch: development
+    
+  - provider: s3
+    access_key_id: $ACCESS_KEY_ID
+    secret_access_key: $SECRET_ACCESS_KEY
+    bucket: "qasm703"
+    region: us-east-2
+    skip_cleanup: true
+    on:
+      branch: qa
+    
+notifications:
+  email: 
+    recipients:
+      - enescinar944@gmail.com
+    on_success: always
+    on_failure: always
